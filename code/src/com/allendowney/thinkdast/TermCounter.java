@@ -38,8 +38,8 @@ public class TermCounter {
 	public int size() {
 		int totalCount = 0;
 		
-		for (String term: map.keySet()) {
-			totalCount += map.get(term);
+		for (String key: map.keySet()) {
+			totalCount += get(key);
 		}
 		
 		return totalCount;
