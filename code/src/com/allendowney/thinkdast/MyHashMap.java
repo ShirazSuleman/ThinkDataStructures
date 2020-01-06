@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * Implementation of a HashMap using a collection of MyLinearMap and
  * resizing when there are too many entries.
@@ -22,19 +20,51 @@ public class MyHashMap<K, V> extends MyBetterMap<K, V> implements Map<K, V> {
 
 	// average number of entries per map before we rehash
 	protected static final double FACTOR = 1.0;
-
+	
+	private int size = 0;
+	
+	@Override
+	public int size() {
+		return size;
+	}
+	
 	@Override
 	public V put(K key, V value) {
-		V oldValue = super.put(key, value);
-
-		//System.out.println("Put " + key + " in " + map + " size now " + map.size());
-
-		// check if the number of elements per map exceeds the threshold
+		MyLinearMap<K, V> map = chooseMap(key);
+		size -= map.size();
+		V oldValue = map.put(key, value);
+		size += map.size();
+		
 		if (size() > maps.size() * FACTOR) {
+			size = 0;
 			rehash();
 		}
+		
 		return oldValue;
 	}
+
+	@Override
+	public void putAll(Map<? extends K, ? extends V> map) {
+		for (Map.Entry<? extends K, ? extends V> entry: map.entrySet()) {
+			put(entry.getKey(), entry.getValue());
+		}
+	}
+	
+	@Override
+	public V remove(Object key) {
+		MyLinearMap<K, V> map = super.chooseMap(key);
+		size -= map.size();
+		V value = map.remove(key);
+		size += map.size();
+		return value;
+	}
+	
+	@Override
+	public void clear() {
+		super.clear();
+		size = 0;
+	}
+
 
 	/**
 	 * Doubles the number of maps and rehashes the existing entries.
