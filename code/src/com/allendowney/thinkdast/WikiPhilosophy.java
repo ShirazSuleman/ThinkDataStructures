@@ -96,7 +96,6 @@ public class WikiPhilosophy {
     	for (String link: visited) {
     		System.out.println("\t" + link);
     	}
-    	System.out.println("\t" + currentLink);
     	System.out.println(result);
     }
     
@@ -104,7 +103,7 @@ public class WikiPhilosophy {
     	boolean isValidLink = isRelativeLink(node);
     	
     	if (isValidLink) {
-    		isValidLink = isInItalics(node, root);
+    		isValidLink = !isInItalics(node, root);
     	}
     	
     	if (isValidLink) {
@@ -128,14 +127,14 @@ public class WikiPhilosophy {
 			if (parentNode instanceof Element) {
 				Element parentElement = (Element) parentNode;
 				if (parentElement.tagName() == "em" || parentElement.tagName() == "i") {
-					return false;
+					return true;
 				}
 			}
 			
 			parentNode = parentNode.parentNode();
 		}
 		
-		return true;
+		return false;
 	}
 	
 	private static boolean isWithinParenthesis(Node node, Node root) {
