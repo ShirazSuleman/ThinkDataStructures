@@ -8,6 +8,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,8 +71,31 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 		// something to make the compiler happy
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>) target;
+		
+		Node current = root;
+		
+		while (current != null) {
+			int comparison = k.compareTo(current.key);
+			
+			if (comparison < 0) {
+				if (current.left == null) {
+					break;
+				}
+				
+				current = current.left;
+			} 
+			else if (comparison > 0) {
+				if (current.right == null) {
+					break;
+				}
+				
+				current = current.right;
+			}
+			else {
+				return current;
+			}
+		}
 
-		// TODO: FILL THIS IN!
 		return null;
 	}
 
@@ -95,8 +119,45 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	}
 
 	private boolean containsValueHelper(Node node, Object target) {
-		// TODO: FILL THIS IN!
-		return false;
+		// Breadth First Search
+		/*
+		Node current = node;
+		List<Node> nodesToCheck = new LinkedList<Node>();
+		nodesToCheck.add(current);
+		
+		while (!nodesToCheck.isEmpty()) {
+			if (current.left != null) {
+				nodesToCheck.add(nodesToCheck.size(), current.left);
+			}
+			
+			if (current.right != null) {
+				nodesToCheck.add(nodesToCheck.size(), current.right);
+			}
+			
+			if (equals(target, current.value)) {
+				return true;
+			}
+			
+			current = nodesToCheck.remove(0);
+		}
+		*/
+		
+		// Depth First Search
+		boolean result = false;
+		
+		if (node.left != null) {
+			result = containsValueHelper(node.left, target);
+		}
+		
+		if (!result) {
+			result = equals(node.value, target);
+		}
+		
+		if (!result && node.right != null) {
+			result = containsValueHelper(node.right, target);
+		}
+		
+		return result;
 	}
 
 	@Override
@@ -139,7 +200,42 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	}
 
 	private V putHelper(Node node, K key, V value) {
-		// TODO: FILL THIS IN!
+		Node current = node;
+		
+		while (current != null) {
+			@SuppressWarnings("unchecked")
+			Comparable<K> k = (Comparable<K>) key;
+			
+			int comparison = k.compareTo(current.key);
+						
+			if (comparison < 0) {
+				if (current.left == null) {
+					current.left = new Node(key, value);
+					size++;
+					return null;
+				}
+				else {
+					current = current.left;
+				}
+			}
+			else if (comparison > 0) {
+				if (current.right == null) {
+					current.right = new Node(key, value);
+					size++;
+					return null;
+				}
+				else {
+					current = current.right;
+				}
+			}
+			else {
+				V previousValue = current.value;
+				current.value = value;
+				return previousValue;
+			}
+
+		}
+		
 		return null;
 	}
 
