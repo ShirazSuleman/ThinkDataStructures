@@ -119,8 +119,6 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	}
 
 	private boolean containsValueHelper(Node node, Object target) {
-		// Breadth First Search
-		/*
 		Node current = node;
 		List<Node> nodesToCheck = new LinkedList<Node>();
 		nodesToCheck.add(current);
@@ -140,24 +138,8 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 			
 			current = nodesToCheck.remove(0);
 		}
-		*/
 		
-		// Depth First Search
-		boolean result = false;
-		
-		if (node.left != null) {
-			result = containsValueHelper(node.left, target);
-		}
-		
-		if (!result) {
-			result = equals(node.value, target);
-		}
-		
-		if (!result && node.right != null) {
-			result = containsValueHelper(node.right, target);
-		}
-		
-		return result;
+		return false;
 	}
 
 	@Override
@@ -187,6 +169,8 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	}
 	
 	private void keySetHelper(Node node, Set<K> set) {
+		if (node == null) return;
+		
 		if (node.left != null) {
 			keySetHelper(node.left, set);
 		}
@@ -260,8 +244,68 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 
 	@Override
 	public V remove(Object key) {
-		// OPTIONAL TODO: FILL THIS IN!
-		throw new UnsupportedOperationException();
+		Node current = root;
+		Node nodeToDelete = null;
+		Node parent = null;
+		
+		@SuppressWarnings("unchecked")
+		Comparable<? super K> k = (Comparable<? super K>) key;
+		
+		while (current != null) {
+			int comparison = k.compareTo(current.key);
+			
+			parent = current;
+			
+			if (comparison < 0) {
+				current = current.left;
+			}
+			else if (comparison > 0) {
+				current = current.right;
+			} 
+			else {
+				nodeToDelete = current;
+				break;
+			}
+		}
+		
+		if (nodeToDelete == null) {
+			return null;
+		}
+		
+		// Has no children
+		if (nodeToDelete.left == null && nodeToDelete.right == null) {
+			if (parent.left == nodeToDelete) {
+				parent.left = null;
+			}
+			else {
+				parent.right = null;
+			}
+		}
+		// Has one child
+		else if (nodeToDelete.left == null || nodeToDelete.right == null) {
+			if (nodeToDelete.left == null) {
+				if (parent.left == nodeToDelete) {
+					parent.left = nodeToDelete.right;
+				}
+				else {
+					parent.right = nodeToDelete.right;
+				}
+			}
+			else if (nodeToDelete.right == null) {
+				if (parent.left == nodeToDelete) {
+					parent.left = nodeToDelete.left;
+				}
+				else {
+					parent.right = nodeToDelete.left;
+				}
+			}
+		}
+		// Has two children
+		else {
+			
+		}
+		
+		return nodeToDelete.value;
 	}
 
 	@Override
