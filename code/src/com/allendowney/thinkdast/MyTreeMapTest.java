@@ -167,11 +167,11 @@ public class MyTreeMapTest {
 	 */
 	@Test
 	public void testRemove() {
-		map.remove("06");
+		assertThat(map.remove("06"), is(6));
 		assertThat(map.size(), is(8));
 		assertThat(map.get("06"), nullValue());
 		assertThat(map.get("10"), is(10));
-		map.remove("10");
+		assertThat(map.remove("10"), is(10));
 		assertThat(map.size(), is(7));
 		assertThat(map.get("10"), nullValue());
 	}

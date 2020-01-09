@@ -254,12 +254,12 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 		while (current != null) {
 			int comparison = k.compareTo(current.key);
 			
-			parent = current;
-			
 			if (comparison < 0) {
+				parent = current;
 				current = current.left;
 			}
 			else if (comparison > 0) {
+				parent = current;
 				current = current.right;
 			} 
 			else {
@@ -272,6 +272,8 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 			return null;
 		}
 		
+		V previousValue = null;
+		
 		// Has no children
 		if (nodeToDelete.left == null && nodeToDelete.right == null) {
 			if (parent.left == nodeToDelete) {
@@ -280,6 +282,8 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 			else {
 				parent.right = null;
 			}
+			
+			previousValue = nodeToDelete.value;
 		}
 		// Has one child
 		else if (nodeToDelete.left == null || nodeToDelete.right == null) {
@@ -299,13 +303,31 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 					parent.right = nodeToDelete.left;
 				}
 			}
+			
+			previousValue = nodeToDelete.value;
 		}
 		// Has two children
 		else {
+			Node successor = nodeToDelete.right;
 			
+			while (successor.left != null) {
+				Node newSuccessor = successor.left;
+				
+				if (newSuccessor.left == null) {
+					successor.left = null;
+				}
+				
+				successor = newSuccessor;
+			}
+			
+			previousValue = nodeToDelete.value;
+			
+			nodeToDelete.key = successor.key;
+			nodeToDelete.value = successor.value;
 		}
 		
-		return nodeToDelete.value;
+		size--;
+		return previousValue;
 	}
 
 	@Override
