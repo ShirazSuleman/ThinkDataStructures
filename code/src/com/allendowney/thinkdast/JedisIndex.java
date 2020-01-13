@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import redis.clients.jedis.Jedis;
@@ -19,8 +21,10 @@ import redis.clients.jedis.Transaction;
  *
  */
 public class JedisIndex {
-
 	private Jedis jedis;
+	
+	private final String URLSetPrefix = "URLSet:";
+	private final String TermCounterPrefix = "TermCounter:";
 
 	/**
 	 * Constructor.
@@ -37,7 +41,7 @@ public class JedisIndex {
 	 * @return Redis key.
 	 */
 	private String urlSetKey(String term) {
-		return "URLSet:" + term;
+		return URLSetPrefix + term;
 	}
 
 	/**
@@ -46,7 +50,7 @@ public class JedisIndex {
 	 * @return Redis key.
 	 */
 	private String termCounterKey(String url) {
-		return "TermCounter:" + url;
+		return TermCounterPrefix + url;
 	}
 
 	/**
@@ -77,8 +81,7 @@ public class JedisIndex {
 	 * @return Set of URLs.
 	 */
 	public Set<String> getURLs(String term) {
-        // FILL THIS IN!
-		return null;
+		return jedis.smembers(urlSetKey(term));
 	}
 
     /**
@@ -88,8 +91,15 @@ public class JedisIndex {
 	 * @return Map from URL to count.
 	 */
 	public Map<String, Integer> getCounts(String term) {
-        // FILL THIS IN!
-		return null;
+		Map<String, Integer> map = new HashMap<String, Integer>();
+
+		Set<String> urls = getURLs(term);
+
+		for (String url: urls) {
+			map.put(url, getCount(url, term));
+		}
+
+		return map;
 	}
 
     /**
@@ -100,8 +110,7 @@ public class JedisIndex {
 	 * @return
 	 */
 	public Integer getCount(String url, String term) {
-        // FILL THIS IN!
-		return null;
+		return new Integer(jedis.hget(termCounterKey(url), term));
 	}
 
 	/**
@@ -111,7 +120,13 @@ public class JedisIndex {
 	 * @param paragraphs  Collection of elements that should be indexed.
 	 */
 	public void indexPage(String url, Elements paragraphs) {
-		// TODO: FILL THIS IN!
+		jedis.del(termCounterKey(url));
+
+		Transaction t = jedis.multi();
+		for (Node node: paragraphs) {
+			processTree(node, url, t);
+		}
+		t.exec();
 	}
 
 	/**
@@ -162,7 +177,7 @@ public class JedisIndex {
 	 * @return
 	 */
 	public Set<String> urlSetKeys() {
-		return jedis.keys("URLSet:*");
+		return jedis.keys(URLSetPrefix + "*");
 	}
 
 	/**
@@ -173,7 +188,7 @@ public class JedisIndex {
 	 * @return
 	 */
 	public Set<String> termCounterKeys() {
-		return jedis.keys("TermCounter:*");
+		return jedis.keys(TermCounterPrefix + "*");
 	}
 
 	/**
@@ -223,6 +238,41 @@ public class JedisIndex {
 		}
 		t.exec();
 	}
+	
+	/**
+	 * Finds TextNodes in a DOM tree and counts their words.
+	 *
+	 * @param root
+	 */
+	public void processTree(Node root, String url, Transaction t) {
+		for (Node node: new WikiNodeIterable(root)) {
+			if (node instanceof TextNode) {
+				processText(((TextNode) node).text(), url, t);
+			}
+		}
+	}
+
+	/**
+	 * Splits `text` into words and counts them.
+	 *
+	 * @param text  The text to process.
+	 */
+	public void processText(String text, String url, Transaction t) {
+		// replace punctuation with spaces, convert to lower case, and split on whitespace		
+		String[] array = text.replaceAll("\\pP", " ").
+				              toLowerCase().
+				              split("\\s+");
+				
+		for (int i=0; i<array.length; i++) {
+			String term = array[i];
+			
+			if (term.isEmpty())
+				continue;
+			
+			t.hincrBy(termCounterKey(url), term, 1);
+			t.sadd(urlSetKey(term), url);
+		}
+	}
 
 	/**
 	 * @param args
@@ -232,9 +282,9 @@ public class JedisIndex {
 		Jedis jedis = JedisMaker.make();
 		JedisIndex index = new JedisIndex(jedis);
 
-		//index.deleteTermCounters();
-		//index.deleteURLSets();
-		//index.deleteAllKeys();
+		index.deleteTermCounters();
+		index.deleteURLSets();
+		index.deleteAllKeys();
 		loadIndex(index);
 
 		Map<String, Integer> map = index.getCounts("the");
@@ -253,11 +303,11 @@ public class JedisIndex {
 		WikiFetcher wf = new WikiFetcher();
 
 		String url = "https://en.wikipedia.org/wiki/Java_(programming_language)";
-		Elements paragraphs = wf.readWikipedia(url);
+		Elements paragraphs = wf.fetchWikipedia(url);
 		index.indexPage(url, paragraphs);
 
 		url = "https://en.wikipedia.org/wiki/Programming_language";
-		paragraphs = wf.readWikipedia(url);
+		paragraphs = wf.fetchWikipedia(url);
 		index.indexPage(url, paragraphs);
 	}
 }
