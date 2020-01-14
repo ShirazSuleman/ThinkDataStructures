@@ -14,6 +14,7 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 
 /**
@@ -94,9 +95,19 @@ public class JedisIndex {
 		Map<String, Integer> map = new HashMap<String, Integer>();
 
 		Set<String> urls = getURLs(term);
+		
+		Transaction t = jedis.multi();
+		Map<String, Response<String>> responses = new HashMap<String, Response<String>>();
 
 		for (String url: urls) {
-			map.put(url, getCount(url, term));
+			Response<String> r = t.hget(termCounterKey(url), term);
+			responses.put(url, r);
+		}
+		
+		t.exec();
+		
+		for (Map.Entry<String, Response<String>> response: responses.entrySet()) {
+			map.put(response.getKey(), new Integer(response.getValue().get()));
 		}
 
 		return map;
