@@ -26,7 +26,7 @@ public class TermCounterTest {
 		String url = "https://en.wikipedia.org/wiki/Java_(programming_language)";
 		
 		WikiFetcher wf = new WikiFetcher();
-		Elements paragraphs = wf.fetchWikipedia(url);
+		Elements paragraphs = wf.readWikipedia(url);
 		
 		counter = new TermCounter(url.toString());
 		counter.processElements(paragraphs);
@@ -34,6 +34,6 @@ public class TermCounterTest {
 
 	@Test
 	public void testSize() {
-		assertThat(counter.size(), is(4428));
+		assertThat(counter.size(), is(4798));
 	}
 }

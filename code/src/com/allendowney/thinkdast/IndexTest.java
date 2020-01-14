@@ -25,11 +25,11 @@ public class IndexTest {
 	public void testIndexPage() throws IOException {
 		// add two pages to the index
 		String url = "https://en.wikipedia.org/wiki/Java_(programming_language)";
-		Elements paragraphs = wf.fetchWikipedia(url);
+		Elements paragraphs = wf.readWikipedia(url);
 		index.indexPage(url, paragraphs);
 		
 		url = "https://en.wikipedia.org/wiki/Programming_language";
-		paragraphs = wf.fetchWikipedia(url);
+		paragraphs = wf.readWikipedia(url);
 		index.indexPage(url, paragraphs);
 		
 		// check the results: the word "occur" only appears on one page, twice
@@ -38,7 +38,7 @@ public class IndexTest {
 		
 		for (TermCounter tc: set) {
 			// this loop only happens once
-			assertThat(tc.size(), is(4428));
+			assertThat(tc.size(), is(4798));
 			assertThat(tc.get("occur"), is(2));
 			assertThat(tc.get("not there"), is(0));
 		}

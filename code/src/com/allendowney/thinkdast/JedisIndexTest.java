@@ -44,11 +44,11 @@ public class JedisIndexTest {
 		WikiFetcher wf = new WikiFetcher();
 
 		url1 = "https://en.wikipedia.org/wiki/Java_(programming_language)";
-		Elements paragraphs = wf.fetchWikipedia(url1);
+		Elements paragraphs = wf.readWikipedia(url1);
 		index.indexPage(url1, paragraphs);
 
 		url2 = "https://en.wikipedia.org/wiki/Programming_language";
-		paragraphs = wf.fetchWikipedia(url2);
+		paragraphs = wf.readWikipedia(url2);
 		index.indexPage(url2, paragraphs);
 	}
 
@@ -66,7 +66,7 @@ public class JedisIndexTest {
 	@Test
 	public void testGetCounts() {
 		Map<String, Integer> map = index.getCounts("the");
-		assertThat(map.get(url1), is(251));
-		assertThat(map.get(url2), is(272));
+		assertThat(map.get(url1), is(339));
+		assertThat(map.get(url2), is(264));
 	}
 }
