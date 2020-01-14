@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Queue;
 
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 
 import redis.clients.jedis.Jedis;
@@ -55,7 +56,28 @@ public class WikiCrawler {
 	 * @throws IOException
 	 */
 	public String crawl(boolean testing) throws IOException {
-		// TODO: FILL THIS IN!
+		String urlToIndex = queue.poll();
+		
+		if (urlToIndex != null) {
+			Elements paragraphs = null;
+			
+			if (testing) {
+				paragraphs = wf.readWikipedia(urlToIndex);
+			} 
+			else {
+				if (index.isIndexed(urlToIndex)) {
+					return null;
+				}
+				else {
+					paragraphs = wf.fetchWikipedia(urlToIndex);
+				}
+			}
+			
+			index.indexPage(urlToIndex, paragraphs);
+			queueInternalLinks(paragraphs);
+			return urlToIndex;
+		}
+		
         return null;
 	}
 
@@ -66,7 +88,20 @@ public class WikiCrawler {
 	 */
 	// NOTE: absence of access level modifier means package-level
 	void queueInternalLinks(Elements paragraphs) {
-        // TODO: FILL THIS IN!
+    	for (Element paragraph: paragraphs) {
+    		queueInternalLinks(paragraph);
+    	}
+	}
+	
+	private void queueInternalLinks(Element paragraph) {
+		Elements links = paragraph.select("a[href]");
+		for (Element link: links) {
+			String URL = link.attr("href");
+			
+			if (URL.startsWith("/wiki/")) {
+				queue.offer("https://en.wikipedia.org" + URL);
+			}
+		}
 	}
 
 	public static void main(String[] args) throws IOException {
