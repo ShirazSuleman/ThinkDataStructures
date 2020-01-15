@@ -1,6 +1,7 @@
 package com.allendowney.thinkdast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -60,8 +61,17 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch or(WikiSearch that) {
-		// TODO: FILL THIS IN!
-		return null;
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		
+		for (Entry<String, Integer> entry: this.map.entrySet() ) {
+			map.put(entry.getKey(), map.getOrDefault(entry.getKey(), 0) + entry.getValue());
+		}
+		
+		for (Entry<String, Integer> entry: that.map.entrySet()) {
+			map.put(entry.getKey(), map.getOrDefault(entry.getKey(), 0) + entry.getValue());
+		}
+				
+		return new WikiSearch(map);
 	}
 
 	/**
@@ -71,8 +81,16 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch and(WikiSearch that) {
-		// TODO: FILL THIS IN!
-		return null;
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		
+		for (Entry<String, Integer> entry: this.map.entrySet() ) {
+			int relevance = that.getRelevance(entry.getKey());
+			if (relevance > 0) {
+				map.put(entry.getKey(), map.getOrDefault(entry.getKey(), 0) + totalRelevance(entry.getValue(), relevance));
+			}
+		}
+				
+		return new WikiSearch(map);
 	}
 
 	/**
@@ -82,8 +100,15 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch minus(WikiSearch that) {
-		// TODO: FILL THIS IN!
-		return null;
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		
+		for (Entry<String, Integer> entry: this.map.entrySet() ) {
+			if (that.getRelevance(entry.getKey()) == 0) {
+				map.put(entry.getKey(), map.getOrDefault(entry.getKey(), 0) + entry.getValue());
+			}
+		}
+				
+		return new WikiSearch(map);
 	}
 
 	/**
@@ -104,8 +129,18 @@ public class WikiSearch {
 	 * @return List of entries with URL and relevance.
 	 */
 	public List<Entry<String, Integer>> sort() {
-		// TODO: FILL THIS IN!
-		return null;
+		Comparator<Entry<String, Integer>> comparator = new Comparator<Entry<String, Integer>>() {
+
+			@Override
+			public int compare(Entry<String, Integer> arg0, Entry<String, Integer> arg1) {
+				return arg0.getValue().compareTo(arg1.getValue());
+			}
+			
+		};
+		
+		List<Entry<String, Integer>> entries = new ArrayList<Entry<String, Integer>>(this.map.entrySet());
+		Collections.sort(entries, comparator);
+		return entries;
 	}
 
 
